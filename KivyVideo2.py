@@ -5,6 +5,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 
+from mapdetial import *
 
     
 class SearchScreen(GridLayout):
@@ -29,10 +30,12 @@ class SearchScreen(GridLayout):
         self.add_widget(btn)
         
     def callback(self, instance):
-        print(instance.text)
-        loc_type = int(self.loc_type.text)
+        print(instance.text)        
         location = self.location.text
-        dist = int(self.dist.text)
+        #loc_type = int(self.loc_type.text)
+        #dist = int(self.dist.text)
+        loc = get_loc(location, api_key)
+        print (loc)        
         
         
 class SimpleKivy(App):

@@ -19,11 +19,15 @@ from geopy.distance import vincenty
 from geopy.distance import VincentyDistance
 from queue import Queue
 
+from KivyVideo2_config import *
+
 # change for logging visibility
 # logging.getLogger().setLevel(logging.INFO)
 
 # urls for google api web service
+location_url = "https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}"
 radar_url = "https://maps.googleapis.com/maps/api/place/radarsearch/json?location={},{}&radius={}&types={}&key={}"
+nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&types={}&key={}"
 detail_url = "https://maps.googleapis.com/maps/api/place/details/json?placeid={}&key={}"
 
 # user agent for populartimes request
@@ -31,6 +35,25 @@ user_agent = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) "
                             "AppleWebKit/537.36 (KHTML, like Gecko) "
                             "Chrome/54.0.2840.98 Safari/537.36"}
 
+
+def get_loc(addr, api_key):
+    """
+    input an address
+    output the location
+    """
+    nearby_str = location_url.format('+'.join(addr.split(' ')), api_key)
+    #print (nearby_str)
+    resp = json.loads(requests.get(nearby_str, auth=('user', 'pass')).text)
+    check_response_code(resp)    
+    detail = resp['results']
+    
+    detail_json = {
+        "id": detail[0]["place_id"],        
+        "types": detail[0]["types"],
+        "coordinates": detail[0]["geometry"]["location"]
+    }
+    return detail_json
+    
 
 def get_circle_centers(b1, b2, radius):
     """
@@ -281,10 +304,10 @@ def get_current_popularity(place_identifier):
     search_url = "https://www.google.com/search?" + "&".join(k + "=" + str(v) for k, v in params_url.items())
     logging.info("searchterm: " + search_url)
 
-    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    #gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
-    resp = urllib.request.urlopen(urllib.request.Request(url=search_url, data=None, headers=user_agent),
-                                  context=gcontext)
+    resp = urllib.request.urlopen(urllib.request.Request(url=search_url, data=None, headers=user_agent))#,
+                                  #context=gcontext)
     data = resp.read().decode('utf-8')
 
     # find eof json
@@ -440,8 +463,8 @@ def run(_params):
 
 if __name__ == '__main__':
     place_id = 'ChIJRXNiFEtWDogRSuN2eZj_Of8'
-    key = 'AIzaSyBEYuHsHsTAGwinNUQe6KuOk1Q5q7v3zcQ'
-    results = get_current_popular_times(key, place_id)
+    #key = 'AIzaSyBEYuHsHsTAGwinNUQe6KuOk1Q5q7v3zcQ'
+    results = get_current_popular_times(api_key, place_id)
     print(results)    
     
    
