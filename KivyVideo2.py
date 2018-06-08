@@ -13,7 +13,11 @@ class SearchScreen(GridLayout):
         super(SearchScreen, self).__init__(**kwargs)
         self.cols = 2
         
-        self.add_widget(Label(text="Looking for"))
+        self.add_widget(Label(text="Look for"))
+        self.loc_name = TextInput(multiline=False)
+        self.add_widget(self.loc_name)
+        
+        self.add_widget(Label(text="What type"))
         self.loc_type = TextInput(multiline=False)
         self.add_widget(self.loc_type)
         
@@ -30,12 +34,17 @@ class SearchScreen(GridLayout):
         self.add_widget(btn)
         
     def callback(self, instance):
-        print(instance.text)        
+        print(instance.text)                
         location = self.location.text
-        #loc_type = int(self.loc_type.text)
-        #dist = int(self.dist.text)
-        loc = get_loc(location, api_key)
-        print (loc)        
+        loc_nm = self.loc_name.text
+        loc_types = (self.loc_type.text).split(' ')
+        dist = float(self.dist.text)*1609.34
+        loc = get_loc(location, api_key)                
+        nearby_place_ids = get_nearby(loc['coordinates']['lat'], loc['coordinates']['lng'], dist, loc_nm, loc_types, api_key)
+        #print(nearby_place_ids)
+        for i, place_id in enumerate(nearby_place_ids):
+            print (i)            
+            print(get_current_popular_times(api_key, place_id))                
         
         
 class SimpleKivy(App):

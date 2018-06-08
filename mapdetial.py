@@ -26,8 +26,8 @@ from KivyVideo2_config import *
 
 # urls for google api web service
 location_url = "https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}"
-radar_url = "https://maps.googleapis.com/maps/api/place/radarsearch/json?location={},{}&radius={}&types={}&key={}"
-nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&types={}&key={}"
+radar_url = "https://maps.googleapis.com/maps/api/place/radarsearch/json?location={},{}&radius={}&name={}&types={}&key={}"
+nearby_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={},{}&radius={}&name={}&types={}&key={}"
 detail_url = "https://maps.googleapis.com/maps/api/place/details/json?placeid={}&key={}"
 
 # user agent for populartimes request
@@ -117,7 +117,29 @@ def worker_radar():
         get_radar(item[0], item[1])
         q_radar.task_done()
 
+def get_nearby(_lat, _lng, radius, nm, l_type, API_key):
+    # places - nearby search - https://developers.google.com/places/web-service/search?hl=de#RadarSearchRequests
+    nearby_str = nearby_url.format(_lat, _lng, radius, nm, "|".join(l_type), API_key)
+    resp = json.loads(requests.get(nearby_str, auth=('user', 'pass')).text)
+    check_response_code(resp)
+    nearby = resp["results"]
+    if len(nearby) > 200:
+        logging.warning("more than 200 places in search radius, some data may get lost")
+    
+    place_ids = []
+    #bounds = params["bounds"]
+    
+    # retrieve google ids for detail search
+    for place in nearby:
+        #geo = place["geometry"]["location"]
+        #if bounds["lower"]["lat"] <= geo["lat"] <= bounds["upper"]["lat"] and bounds["lower"]["lng"] <= geo["lng"] <= bounds["upper"]["lng"]:
+            # this isn't thread safe, but we don't really care, since at worst, a set entry is simply overwritten
+        if place["place_id"] not in place_ids:
+            place_ids.append(place["place_id"])
+               
+    return place_ids
 
+                
 def get_radar(_lat, _lng):
     # places - radar search - https://developers.google.com/places/web-service/search?hl=de#RadarSearchRequests
     radar_str = radar_url.format(_lat, _lng, params["radius"], "|".join(params["type"]), params["API_key"])
